@@ -8,6 +8,7 @@
 ## How to run the project
 
 Already configured PostgreSQL database can be found in `docker-compose.yml`. Running the container can be done with `docker-compose up` command.
+
 The spring boot application can be run by starting main class `BrightRecruitmentApplication.java` from the favourite IDE or using command `mvn spring-boot:run`. 
 
 ## Testing
