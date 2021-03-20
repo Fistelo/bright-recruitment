@@ -34,24 +34,26 @@ import com.rds.brightrecruitment.model.BookDto;
 import com.rds.brightrecruitment.model.BookWithCommentsDto;
 import com.rds.brightrecruitment.model.UpdateBookDto;
 import com.rds.brightrecruitment.persistence.entities.Book;
-import com.rds.brightrecruitment.persistence.repositories.BooksRepository;
+import com.rds.brightrecruitment.persistence.repositories.BookRepository;
 
 @ExtendWith(MockitoExtension.class)
-class BooksServiceTest {
+class BookServiceTest {
 
   @Mock
-  private BooksRepository booksRepository;
+  private BookRepository bookRepository;
   @Mock
   private ModelMapper modelMapper;
   @Mock
   private BookWithCommentsMapper bookWithCommentsMapper;
   @InjectMocks
-  private BooksService booksService;
+  private BookService bookService;
 
   @Mock
   private Book savedBook;
   @Mock
   private BookDto bookDto;
+  @Mock
+  private BookWithCommentsDto bookWithCommentsDto;
 
   private Book book;
 
@@ -68,13 +70,22 @@ class BooksServiceTest {
   @Test
   void should_retrieve_books() {
     final Pageable pageable = mock(Pageable.class);
-    final BookWithCommentsDto bookWithCommentsDto = mock(BookWithCommentsDto.class);
-    when(booksRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(book)));
+    when(bookRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(book)));
     when(bookWithCommentsMapper.map(book)).thenReturn(bookWithCommentsDto);
 
-    final Page<BookWithCommentsDto> bookPage = booksService.getBooks(pageable);
+    final Page<BookWithCommentsDto> bookPage = bookService.getBooks(pageable);
 
     assertThat(bookPage.getContent().get(0)).isEqualTo(bookWithCommentsDto);
+  }
+
+  @Test
+  void should_retrieve_book() {
+    mockBookFound();
+    when(bookWithCommentsMapper.map(book)).thenReturn(bookWithCommentsDto);
+
+    final BookWithCommentsDto book = bookService.getBook(BOOK_ID);
+
+    assertThat(book).isEqualTo(bookWithCommentsDto);
   }
 
   @Test
@@ -83,7 +94,7 @@ class BooksServiceTest {
     when(modelMapper.map(updateBookDto, Book.class)).thenReturn(book);
     mockSaveAndMapToDto();
 
-    final BookDto addedBook = booksService.addBook(updateBookDto);
+    final BookDto addedBook = bookService.addBook(updateBookDto);
 
     assertThat(addedBook).isEqualTo(bookDto);
   }
@@ -100,7 +111,7 @@ class BooksServiceTest {
         .rating(4)
         .build();
 
-    final BookDto updatedBook = booksService.updateBook(BOOK_ID, updateBookDto);
+    final BookDto updatedBook = bookService.updateBook(BOOK_ID, updateBookDto);
 
     assertThat(updatedBook).isEqualTo(bookDto);
     assertThat(book.getTitle()).isEqualTo("Invincible");
@@ -116,7 +127,7 @@ class BooksServiceTest {
     mockSaveAndMapToDto();
     final UpdateBookDto updateBookDto = new UpdateBookDto();
 
-    final BookDto updatedBook = booksService.updateBook(BOOK_ID, updateBookDto);
+    final BookDto updatedBook = bookService.updateBook(BOOK_ID, updateBookDto);
 
     assertThat(updatedBook).isEqualTo(bookDto);
   }
@@ -125,9 +136,9 @@ class BooksServiceTest {
   void should_remove_book() {
     mockBookFound();
 
-    booksService.removeBook(BOOK_ID);
+    bookService.removeBook(BOOK_ID);
 
-    verify(booksRepository).delete(book);
+    verify(bookRepository).delete(book);
   }
 
   @Test
@@ -135,27 +146,27 @@ class BooksServiceTest {
     mockBookFound();
     final AddCommentDto addCommentDto = new AddCommentDto(COMMENT_CONTENT);
 
-    booksService.addCommentToBook(BOOK_ID, addCommentDto);
+    bookService.addCommentToBook(BOOK_ID, addCommentDto);
 
-    verify(booksRepository).save(book);
+    verify(bookRepository).save(book);
     assertThat(book.getComments().get(0).getContent()).isEqualTo(COMMENT_CONTENT);
   }
 
   @Test
   void should_throw_application_specific_exception_on_book_not_found() {
-    when(booksRepository.findById(BOOK_ID)).thenReturn(Optional.empty());
+    when(bookRepository.findById(BOOK_ID)).thenReturn(Optional.empty());
 
-    final BookApiException exception = assertThrows(BookApiException.class, () -> booksService.removeBook(BOOK_ID));
+    final BookApiException exception = assertThrows(BookApiException.class, () -> bookService.removeBook(BOOK_ID));
 
     assertThat(exception.getError()).isEqualTo(ENTITY_NOT_FOUND);
   }
 
   private void mockBookFound() {
-    when(booksRepository.findById(BOOK_ID)).thenReturn(Optional.of(book));
+    when(bookRepository.findById(BOOK_ID)).thenReturn(Optional.of(book));
   }
 
   private void mockSaveAndMapToDto() {
-    when(booksRepository.save(book)).thenReturn(savedBook);
+    when(bookRepository.save(book)).thenReturn(savedBook);
     when(modelMapper.map(savedBook, BookDto.class)).thenReturn(bookDto);
   }
 }

@@ -27,44 +27,49 @@ import com.rds.brightrecruitment.model.BookWithCommentsDto;
 import com.rds.brightrecruitment.model.UpdateBookDto;
 import com.rds.brightrecruitment.model.validation.OnAddValidation;
 import com.rds.brightrecruitment.model.validation.OnUpdateValidation;
-import com.rds.brightrecruitment.service.BooksService;
+import com.rds.brightrecruitment.service.BookService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping(BooksController.BOOKS_PATH)
+@RequestMapping(BookController.BOOKS_PATH)
 @RequiredArgsConstructor
-public class BooksController {
+public class BookController {
 
   static final String BOOKS_PATH = "/v1/books";
 
-  private final BooksService booksService;
+  private final BookService bookService;
 
   @GetMapping
   public Page<BookWithCommentsDto> fetchBooksWithComments(final Pageable pageable) {
-    return booksService.getBooks(pageable);
+    return bookService.getBooks(pageable);
+  }
+
+  @GetMapping("/{id}")
+  public BookWithCommentsDto fetchBookWithComments(@PathVariable final long id) {
+    return bookService.getBook(id);
   }
 
   @PostMapping
   public ResponseEntity<BookDto> addNewBook(@Validated(OnAddValidation.class) @RequestBody final UpdateBookDto bookDto) {
-    final BookDto savedBookDto = booksService.addBook(bookDto);
+    final BookDto savedBookDto = bookService.addBook(bookDto);
     return ResponseEntity.created(URI.create(BOOKS_PATH + "/" + savedBookDto.getId())).body(savedBookDto);
   }
 
   @PatchMapping("/{id}")
   public ResponseEntity<BookDto> updateBook(@PathVariable final long id, @Validated(OnUpdateValidation.class) @RequestBody final UpdateBookDto bookDto) {
-    final BookDto savedBookDto = booksService.updateBook(id, bookDto);
+    final BookDto savedBookDto = bookService.updateBook(id, bookDto);
     return ResponseEntity.created(URI.create(BOOKS_PATH + "/" + savedBookDto.getId())).body(savedBookDto);
   }
 
   @ResponseStatus(NO_CONTENT)
   @DeleteMapping("/{id}")
   public void removeBook(@PathVariable final long id) {
-    booksService.removeBook(id);
+    bookService.removeBook(id);
   }
 
   @ResponseStatus(CREATED)
   @PostMapping("/{bookId}/comments")
   public void addComment(@PathVariable final long bookId, @Valid @RequestBody final AddCommentDto addCommentDto) {
-    booksService.addCommentToBook(bookId, addCommentDto);
+    bookService.addCommentToBook(bookId, addCommentDto);
   }
 }

@@ -1,22 +1,27 @@
 package scanarios;
 
 import static io.restassured.config.RestAssuredConfig.config;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import javax.annotation.Resource;
 
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rds.brightrecruitment.BrightRecruitmentApplication;
@@ -28,12 +33,26 @@ import io.restassured.config.ObjectMapperConfig;
     classes = BrightRecruitmentApplication.class,
     webEnvironment = DEFINED_PORT)
 @ActiveProfiles("itest")
+@Testcontainers
 public class BaseITest {
 
   @LocalServerPort
   private int port;
-  @Resource
-  private Flyway flyway;
+
+  @Rule
+  @Container
+  public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest")
+      .withDatabaseName("bright-db")
+      .withUsername("test")
+      .withPassword("test");
+
+  @Rule
+  @DynamicPropertySource
+  static void registerDynamicProperties(final DynamicPropertyRegistry dynamicPropertyRegistry) {
+    dynamicPropertyRegistry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+    dynamicPropertyRegistry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+    dynamicPropertyRegistry.add("spring.datasource.password", postgreSQLContainer::getPassword);
+  }
 
   @BeforeEach
   public void setUp() {
@@ -46,9 +65,8 @@ public class BaseITest {
     return new ObjectMapperConfig().jackson2ObjectMapperFactory((aClass, s) -> objectMapper);
   }
 
-//  @AfterEach
-//  public void cleanup() {
-//    flyway.clean();
-//    flyway.migrate();
-//  }
+  @Test
+  void verify_postgres_running() {
+    assertThat(postgreSQLContainer.isRunning()).isTrue();
+  }
 }
