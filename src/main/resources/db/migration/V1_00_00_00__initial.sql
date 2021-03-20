@@ -18,3 +18,6 @@ CREATE TABLE comments
     FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
+CREATE INDEX comment_time_desc_idx ON comments (created_at DESC NULLS LAST);
+CREATE INDEX comments_book_foreign_key_idx ON comments (book_id);
+

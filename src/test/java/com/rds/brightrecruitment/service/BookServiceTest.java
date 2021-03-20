@@ -102,7 +102,7 @@ class BookServiceTest {
   @Test
   void should_update_book() {
     mockBookFound();
-    mockSaveAndMapToDto();
+    when(modelMapper.map(book, BookDto.class)).thenReturn(bookDto);
     final UpdateBookDto updateBookDto = UpdateBookDto.builder()
         .title("Invincible")
         .author("Stanislaw Lem")
@@ -124,7 +124,7 @@ class BookServiceTest {
   @Test
   void should_not_update_book_when_no_value_provided() {
     mockBookFound();
-    mockSaveAndMapToDto();
+    when(modelMapper.map(book, BookDto.class)).thenReturn(bookDto);
     final UpdateBookDto updateBookDto = new UpdateBookDto();
 
     final BookDto updatedBook = bookService.updateBook(BOOK_ID, updateBookDto);

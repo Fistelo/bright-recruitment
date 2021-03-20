@@ -3,6 +3,8 @@ package com.rds.brightrecruitment.service;
 import static com.rds.brightrecruitment.exception.ApiError.ENTITY_NOT_FOUND;
 import static java.util.Optional.ofNullable;
 
+import javax.transaction.Transactional;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +44,7 @@ public class BookService {
     return modelMapper.map(savedBook, BookDto.class);
   }
 
+  @Transactional
   public BookDto updateBook(final long id, final UpdateBookDto updateBookDto) {
     final Book bookEntity = fetchBookById(id);
     ofNullable(updateBookDto.getAuthor()).ifPresent(bookEntity::setAuthor);
@@ -50,13 +53,14 @@ public class BookService {
     ofNullable(updateBookDto.getIsbn()).ifPresent(bookEntity::setIsbn);
     ofNullable(updateBookDto.getRating()).ifPresent(bookEntity::setRating);
 
-    return modelMapper.map(bookRepository.save(bookEntity), BookDto.class);
+    return modelMapper.map(bookEntity, BookDto.class);
   }
 
   public void removeBook(final long id) {
     bookRepository.delete(fetchBookById(id));
   }
 
+  @Transactional
   public void addCommentToBook(final long bookId, final AddCommentDto addCommentDto) {
     final Book bookEntity = fetchBookById(bookId);
     bookEntity.addComment(new Comment(addCommentDto.getContent()));

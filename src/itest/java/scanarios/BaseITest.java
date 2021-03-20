@@ -4,10 +4,6 @@ import static io.restassured.config.RestAssuredConfig.config;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
 
-import javax.annotation.Resource;
-
-import org.flywaydb.core.Flyway;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
